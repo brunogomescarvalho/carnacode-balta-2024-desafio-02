@@ -1,0 +1,115 @@
+﻿@inject ILocalStorageService LocalStorage
+@inject NavigationManager NavigationManager
+@using Shared
+@page "/"
+
+<PageTitle>Cálculo IMC</PageTitle>
+
+<div class="container">
+    <h1 class="titulo">Cálculo de IMC</h1>
+    <EditForm class="form" Model="@Model" OnValidSubmit="OnValidSubmit">
+        <input id="altura" class="input" type="text" @bind="@Model.Altura" placeholder="Altura" />
+        <input id="peso" class="input" type="text" @bind="@Model.Peso" placeholder="Peso" />
+        <select id="sexo " class="input optSelect" @bind="@sexo">
+            <option value="">Selecione o sexo</option>
+            <option value="Masculino">Masculino</option>
+            <option value="Feminino">Feminino</option>
+        </select>
+        <div class="checkbox">
+            <input id="checkbox" type="checkbox" @bind="@Model.Maior65Anos" />
+            <label>Eu tenho 65 anos ou mais</label>
+        </div>
+
+        <div class="buttons">
+            <button type="submit" class="button btn-1">Calcular meu IMC</button>
+            <button type="button" class="button btn-2">Entenda o cálculo</button>
+        </div>
+    </EditForm>
+</div>
+
+
+@code {
+    public CalculoIMC Model { get; set; } = new();
+    public string sexo = string.Empty;
+    public async Task OnValidSubmit()
+    {
+        Model.Sexo = sexo == "Masculino" ? Sexo.MASCULINO : Sexo.FEMININO;
+
+        RegistroIMC result = Model.ProcessarResultado();
+
+        await SalvarLocalStorage(LocalStorage, result);
+
+        NavigationManager.NavigateTo("/history");
+    }
+
+    private async Task SalvarLocalStorage(ILocalStorageService localStorage, RegistroIMC registro)
+    {
+        var registros = await localStorage.GetItemAsync<List<RegistroIMC>>("ICM-dados") ?? new List<RegistroIMC>();
+
+        registros.Add(registro);
+
+        await localStorage.SetItemAsync<List<RegistroIMC>>("ICM-dados", registros);
+    }
+
+    public class CalculoIMC
+    {
+        public string Peso { get; set; } = string.Empty;
+        public string Altura { get; set; } = string.Empty;
+        public bool Maior65Anos { get; set; }
+        public Sexo Sexo { get; set; }
+
+        private string Normal = "Parabéns, você está no seu peso ideal, continue mantendo este estilo!";
+        private string Abaixo = "Atenção, você está abaixo do peso ideal!.";
+        private string Sobrepeso = "Estamos quase lá! Faça alguns ajustes para ficar no peso ideal!";
+        private string Obesidade = "Atenção, você está em um nível de obesidade.";
+
+        public RegistroIMC ProcessarResultado()
+        {
+            var result = CalcularIMC();
+
+            return ClassificarIMC(result);
+        }
+
+        public double CalcularIMC()
+        {
+            var altura = Convert.ToDouble(Altura);
+
+            return Convert.ToDouble(Peso) / (altura * altura);
+        }
+
+        RegistroIMC ClassificarIMC(double result)
+        {
+            string mensagem;
+            string resultado;
+
+            if (result < 18.5)
+            {
+                mensagem = Abaixo;
+                resultado = "Abaixo do peso";
+            }
+            else if (result >= 18.5 && result <= 24.99)
+            {
+                mensagem = Normal;
+                resultado = "Peso ideal";
+            }
+            else if (result >= 25 && result <= 29.99)
+            {
+                mensagem = Sobrepeso;
+                resultado = "Sobrepeso";
+            }
+            else
+            {
+                mensagem = Obesidade;
+                resultado = "Obesidade";
+            }
+
+            return new RegistroIMC(this, resultado, mensagem);
+        }
+    }
+
+    public enum Sexo
+    {
+        MASCULINO,
+        FEMININO
+    }
+}

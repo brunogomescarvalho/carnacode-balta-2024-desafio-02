@@ -1,0 +1,64 @@
+@page "/history"
+@inject ILocalStorageService LocalStorage
+@using Shared
+
+<div class="container">
+    <div class="history-icon">
+        <img class="history-icon-no-bg" src="../../assets/icon-no-bg.png">
+    </div>
+    <div class="history-header">
+        <h1>Histórico</h1>
+    </div>
+    <div class="history-form">
+        <input class="history-input" type="text" placeholder="Pesquisar..." />
+    </div>
+
+    @foreach (var reg in registros)
+    {
+        <div class="history-items">
+            <div class="history-box">
+                <div class="history-card">
+                </div>
+            </div>
+            <div class="history-resultado">
+                <div class="history-resultado-header">
+                    <span class="history-titulo"> @(reg.Resultado == "Peso ideal" ? "✅" : "⛔")@reg.Resultado</span><span
+                        class="history-data">@VerificarHora(@reg.Data)</span>
+                </div>
+                <div class="history-descricao">
+                    <p>@reg.Mensagem </p>
+                    <hr>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+
+@code {
+    List<RegistroIMC> registros = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        registros = await LocalStorage.GetItemAsync<List<RegistroIMC>>("ICM-dados");
+
+        registros?.Reverse();
+    }
+
+    public string VerificarHora(DateTime hora)
+    {
+        var diferenca = DateTime.Now - hora;
+        double minutos = diferenca.TotalMinutes;
+
+
+        if (minutos < 1)
+            return "1 min";
+
+        else if (minutos < 60)
+            return $"{(int)minutos} min";
+
+        else
+            return hora.ToShortDateString();
+
+    }
+}
