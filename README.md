@@ -13,8 +13,4 @@ Neste segundo desafio, desenvolvemos uma aplicação completa para calcular o IM
 * Razor
 * Blazor
 
-### Ferramentas Utilizadas
-* << INFORMAR A IDE UTILIZADA >>
 
-# Recompensa
-<img src="https://baltaio.blob.core.windows.net/temp/carnacode-badge-desafio-02.png" alt="CarnaCode 2024 - Segundo Desafio Completo" width="256" />
